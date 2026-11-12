@@ -8,46 +8,50 @@
 <title>Broom The Room | Global Leaderboard</title>
 <style>
 :root {
+    color-scheme: dark;
     --bg: #0d1117;
     --panel: #161b22;
     --border: #30363d;
     --text: #e6edf3;
     --muted: #8b949e;
-    --gold: #f1c40f;
-    --silver: #c0c0c0;
+    --green: #3fb950;
+    --gold: #d29922;
+    --silver: #c9d1d9;
     --bronze: #cd7f32;
     --red: #f85149;
-    --green: #3fb950;
 }
 * { box-sizing: border-box; }
 body {
     margin: 0;
-    padding: 35px 18px;
+    padding: 30px 18px 60px;
     background: var(--bg);
     color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-.container { max-width: 1100px; margin: auto; }
-header { text-align: center; margin-bottom: 30px; }
+.container { max-width: 1150px; margin: auto; }
+header { text-align: center; margin: 15px 0 35px; }
 header h1 {
     margin: 0;
-    font-size: clamp(28px, 5vw, 42px);
+    font-size: clamp(30px, 6vw, 48px);
     letter-spacing: -1.5px;
 }
-header p { color: var(--muted); margin-top: 10px; }
-.status {
+header p { color: var(--muted); margin-top: 9px; }
+.live {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    color: var(--muted);
-    font-size: 13px;
+    gap: 7px;
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
     margin-top: 12px;
 }
-.dot {
+.live::before {
+    content: "";
     width: 8px;
     height: 8px;
-    border-radius: 50%;
     background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--green);
 }
 .stats {
     display: grid;
@@ -65,125 +69,155 @@ header p { color: var(--muted); margin-top: 10px; }
 .stat strong {
     display: block;
     font-size: 25px;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 .stat span { color: var(--muted); font-size: 12px; }
 .section {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 22px;
+    overflow: hidden;
+    margin-bottom: 25px;
 }
 .section-heading {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
-    margin-bottom: 18px;
 }
-.section-heading h2 { margin: 0; font-size: 19px; }
-.world-title { color: var(--gold); }
-.cheat-title { color: var(--red); }
+.section-heading h2 { margin: 0; font-size: 17px; }
+.section-heading small { color: var(--muted); }
 .podium {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    align-items: end;
+    padding: 20px;
 }
 .podium-card {
-    text-align: center;
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 20px 10px;
     background: #0d1117;
+    padding: 22px 10px;
+    text-align: center;
     min-width: 0;
 }
 .podium-card.first { border-color: var(--gold); }
 .podium-card.second { border-color: var(--silver); }
 .podium-card.third { border-color: var(--bronze); }
-.podium-label {
-    font-size: 12px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-}
-.first .podium-label { color: var(--gold); }
-.second .podium-label { color: var(--silver); }
-.third .podium-label { color: var(--bronze); }
+.podium-rank { font-size: 28px; margin-bottom: 8px; }
 .podium-name {
-    font-weight: bold;
+    font-weight: 700;
     overflow-wrap: anywhere;
     margin-bottom: 8px;
 }
-.podium-time { color: var(--muted); font-size: 14px; }
-.empty { color: var(--muted); text-align: center; padding: 25px 10px; }
+.podium-time { font-size: 21px; font-weight: 800; }
+.podium-label { color: var(--muted); font-size: 11px; margin-top: 5px; }
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    margin: 4px 2px 0;
+}
+.verified {
+    color: var(--green);
+    background: #102719;
+    border: 1px solid #238636;
+}
+.unverified {
+    color: var(--gold);
+    background: #2d230f;
+    border: 1px solid #6e5315;
+}
+.cheat {
+    color: var(--red);
+    background: #351416;
+    border: 1px solid #8e3036;
+}
 .controls {
     display: flex;
     gap: 10px;
+    padding: 16px 20px;
     flex-wrap: wrap;
-    margin-bottom: 15px;
 }
-input, button {
+input, select, button {
     background: #0d1117;
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 7px;
-    padding: 10px 13px;
-    font-size: 14px;
+    padding: 10px 12px;
+    font: inherit;
 }
 input { flex: 1; min-width: 180px; }
 button { cursor: pointer; }
 button:hover { border-color: #8b949e; }
 table { width: 100%; border-collapse: collapse; }
 th, td {
-    padding: 13px 10px;
-    border-bottom: 1px solid var(--border);
+    padding: 13px 16px;
     text-align: left;
-    font-size: 14px;
+    border-top: 1px solid var(--border);
 }
-th { color: var(--muted); font-size: 12px; text-transform: uppercase; }
-td.time { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.rank { color: var(--muted); width: 65px; }
-.rank-1 { color: var(--gold); font-weight: bold; }
-.rank-2 { color: var(--silver); font-weight: bold; }
-.rank-3 { color: var(--bronze); font-weight: bold; }
+th {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    background: #0d1117;
+}
+td { font-size: 13px; }
+tbody tr:hover { background: #1c2128; }
+.rank { color: var(--muted); font-weight: 700; width: 65px; }
+.player { font-weight: 700; }
+.time { font-weight: 800; font-variant-numeric: tabular-nums; }
+.date { color: var(--muted); white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+.empty {
+    padding: 35px 15px;
+    color: var(--muted);
+    text-align: center;
+}
 .pagination {
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     gap: 12px;
-    margin-top: 18px;
+    padding: 17px;
+    border-top: 1px solid var(--border);
 }
-.pagination span { color: var(--muted); font-size: 13px; }
-.cheat-section { border-color: #66302e; }
-.cheat-section th { color: #e58b86; }
-.cheat-badge {
-    display: inline-block;
-    color: var(--red);
-    border: 1px solid #66302e;
-    background: #2d1616;
-    border-radius: 5px;
-    padding: 4px 7px;
-    font-size: 11px;
-    font-weight: bold;
+.pagination span { color: var(--muted); font-size: 12px; }
+.cheat-intro {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 15px 20px 0;
 }
-footer {
-    text-align: center;
+.cheat-title { color: var(--red); }
+.status-message {
     color: var(--muted);
     font-size: 12px;
-    padding: 15px;
+    text-align: center;
+    margin: 18px 0;
 }
-@media (max-width: 600px) {
-    body { padding: 22px 10px; }
-    .section { padding: 14px; }
+footer {
+    color: var(--muted);
+    text-align: center;
+    font-size: 11px;
+    margin-top: 35px;
+}
+@media(max-width: 650px) {
+    body { padding: 20px 10px 40px; }
     .stats { gap: 7px; }
     .stat { padding: 13px 5px; }
     .stat strong { font-size: 20px; }
-    .podium { gap: 6px; }
+    .stat span { font-size: 10px; }
+    .podium { gap: 6px; padding: 10px; }
     .podium-card { padding: 15px 5px; }
-    th, td { padding: 11px 6px; font-size: 12px; }
+    .podium-time { font-size: 16px; }
+    th, td { padding: 11px 10px; }
 }
 </style>
 </head>
@@ -192,97 +226,103 @@ footer {
 
 <header>
     <h1>BROOM THE ROOM</h1>
-    <p>Global Speedrun Leaderboard</p>
-    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Connecting to leaderboard...</span></div>
+    <p>Global Player Leaderboard</p>
+    <div class="live">LIVE LEADERBOARD</div>
 </header>
 
 <div class="stats">
     <div class="stat">
-        <strong id="totalScores">--</strong>
-        <span>LEGITIMATE RECORDS</span>
+        <strong id="totalPlayers">0</strong>
+        <span>LEGITIMATE ENTRIES</span>
     </div>
     <div class="stat">
-        <strong id="worldRecord">--</strong>
+        <strong id="cheatPlayers">0</strong>
+        <span>CHEATS USED</span>
+    </div>
+    <div class="stat">
+        <strong id="fastestTime">--</strong>
         <span>WORLD RECORD</span>
-    </div>
-    <div class="stat">
-        <strong id="cheatCount">--</strong>
-        <span>CHEATS DETECTED</span>
     </div>
 </div>
 
 <section class="section">
     <div class="section-heading">
-        <h2>🏆 TOP THREE</h2>
-        <span style="color:var(--muted);font-size:12px">GLOBAL RANKINGS</span>
+        <h2>🏆 WORLD RECORD HOLDERS</h2>
+        <small>Top three fastest times</small>
     </div>
     <div class="podium" id="podium">
-        <div class="empty">Loading records...</div>
+        <div class="empty">Loading leaderboard...</div>
     </div>
 </section>
 
 <section class="section">
     <div class="section-heading">
-        <h2>GLOBAL LEADERBOARD</h2>
-        <span style="color:var(--muted);font-size:12px">TOP 1,000</span>
+        <h2>GLOBAL RANKINGS</h2>
+        <small>Top 1,000 legitimate entries</small>
     </div>
-
     <div class="controls">
-        <input type="search" id="searchInput" placeholder="Search players...">
-        <button id="refreshButton">Refresh</button>
+        <input id="searchInput" type="search" placeholder="Search players...">
+        <select id="pageSize">
+            <option value="25">25 per page</option>
+            <option value="50" selected>50 per page</option>
+            <option value="100">100 per page</option>
+        </select>
     </div>
-
-    <div style="overflow-x:auto">
+    <div class="table-wrap">
         <table>
             <thead>
                 <tr>
                     <th>Rank</th>
                     <th>Player</th>
                     <th>Time</th>
+                    <th>Verification</th>
                     <th>Date</th>
                 </tr>
             </thead>
             <tbody id="leaderboardBody">
-                <tr><td colspan="4" class="empty">Loading leaderboard...</td></tr>
+                <tr><td colspan="5" class="empty">Loading...</td></tr>
             </tbody>
         </table>
     </div>
-
     <div class="pagination">
-        <button id="previousButton">Previous</button>
+        <button id="previousPage">Previous</button>
         <span id="pageInfo">Page 1</span>
-        <button id="nextButton">Next</button>
+        <button id="nextPage">Next</button>
     </div>
 </section>
 
-<section class="section cheat-section">
+<section class="section">
     <div class="section-heading">
-        <h2 class="cheat-title">CHEATS USED</h2>
-        <span class="cheat-badge">UNDER 5 SECONDS</span>
+        <h2 class="cheat-title">🚫 CHEATS USED</h2>
+        <span class="badge cheat">UNDER 5 SECONDS</span>
     </div>
-    <p style="color:var(--muted);font-size:13px;margin-top:-7px;margin-bottom:18px">
-        Runs recorded below 5,000 milliseconds are automatically flagged and excluded from the legitimate rankings.
-    </p>
-    <div style="overflow-x:auto">
+    <div class="cheat-intro">
+        Entries with recorded times below five seconds are separated from the legitimate rankings.
+    </div>
+    <div class="table-wrap">
         <table>
             <thead>
                 <tr>
-                    <th>Category</th>
+                    <th>#</th>
                     <th>Player</th>
                     <th>Time</th>
+                    <th>Verification</th>
                     <th>Date</th>
                 </tr>
             </thead>
-            <tbody id="cheatsBody">
-                <tr><td colspan="4" class="empty">Checking for suspicious times...</td></tr>
+            <tbody id="cheatBody">
+                <tr><td colspan="5" class="empty">Loading...</td></tr>
             </tbody>
         </table>
     </div>
 </section>
 
+<div class="status-message" id="statusMessage">Connecting to Firebase...</div>
+
 <footer>
-    Broom The Room Simulator · Global Leaderboard · Live Firebase Data
+    Broom The Room Simulator · Global Leaderboard
 </footer>
+
 </div>
 
 <script type="module">
@@ -310,25 +350,22 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const scoresRef = collection(db, "leaderboard");
 
-const LEGITIMATE_LIMIT = 1000;
-const PAGE_SIZE = 50;
-const CHEAT_THRESHOLD = 5000;
-
-let legitimateScores = [];
-let cheatScores = [];
+let legitimateEntries = [];
+let cheatEntries = [];
 let currentPage = 1;
 
-const $ = id => document.getElementById(id);
+const leaderboardBody = document.getElementById("leaderboardBody");
+const cheatBody = document.getElementById("cheatBody");
+const searchInput = document.getElementById("searchInput");
+const pageSize = document.getElementById("pageSize");
 
-function formatTime(ms) {
-    if (!Number.isFinite(Number(ms))) return "--";
-    const seconds = Number(ms) / 1000;
-    return seconds.toFixed(3) + "s";
+function formatTime(milliseconds) {
+    return (milliseconds / 1000).toFixed(3) + "s";
 }
 
-function formatDate(value) {
-    if (!value) return "Unknown";
-    const date = new Date(value);
+function formatDate(dateString) {
+    if (!dateString) return "Unknown";
+    const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return "Unknown";
     return date.toLocaleDateString(undefined, {
         year: "numeric",
@@ -337,182 +374,200 @@ function formatDate(value) {
     });
 }
 
+function getVerification(score) {
+    return score.verificationStatus === "UNVERIFIED"
+        ? "UNVERIFIED"
+        : "VERIFIED";
+}
+
+function verificationBadge(score) {
+    const status = getVerification(score);
+    return `<span class="badge ${status.toLowerCase()}">${status}</span>`;
+}
+
+function renderPodium() {
+    const podium = document.getElementById("podium");
+    const topThree = legitimateEntries.slice(0, 3);
+
+    if (!topThree.length) {
+        podium.innerHTML = '<div class="empty">No verified leaderboard entries yet.</div>';
+        return;
+    }
+
+    const positions = [
+        { label: "🥇", className: "first" },
+        { label: "🥈", className: "second" },
+        { label: "🥉", className: "third" }
+    ];
+
+    podium.innerHTML = topThree.map((score, index) => `
+        <div class="podium-card ${positions[index].className}">
+            <div class="podium-rank">${positions[index].label}</div>
+            <div class="podium-name">${escapeHTML(score.name || "Anonymous")}</div>
+            <div>${verificationBadge(score)}</div>
+            <div class="podium-time">${formatTime(score.time)}</div>
+            <div class="podium-label">${["WORLD RECORD", "2ND PLACE", "3RD PLACE"][index]}</div>
+        </div>
+    `).join("");
+}
+
+function renderLegitimate() {
+    const search = searchInput.value.trim().toLowerCase();
+    const filtered = legitimateEntries.filter(score =>
+        (score.name || "").toLowerCase().includes(search)
+    );
+
+    const size = Number(pageSize.value);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / size));
+
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start = (currentPage - 1) * size;
+    const pageEntries = filtered.slice(start, start + size);
+
+    if (!pageEntries.length) {
+        leaderboardBody.innerHTML =
+            '<tr><td colspan="5" class="empty">No matching players found.</td></tr>';
+    } else {
+        leaderboardBody.innerHTML = pageEntries.map((score, index) => {
+            const rank = start + index + 1;
+            return `
+                <tr>
+                    <td class="rank">#${rank}</td>
+                    <td class="player">${escapeHTML(score.name || "Anonymous")}</td>
+                    <td class="time">${formatTime(score.time)}</td>
+                    <td>${verificationBadge(score)}</td>
+                    <td class="date">${formatDate(score.date)}</td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    document.getElementById("pageInfo").textContent =
+        `Page ${currentPage} of ${totalPages} · ${filtered.length} entries`;
+
+    document.getElementById("previousPage").disabled = currentPage <= 1;
+    document.getElementById("nextPage").disabled = currentPage >= totalPages;
+}
+
+function renderCheats() {
+    if (!cheatEntries.length) {
+        cheatBody.innerHTML =
+            '<tr><td colspan="5" class="empty">No cheat-flagged entries found.</td></tr>';
+        return;
+    }
+
+    cheatBody.innerHTML = cheatEntries.map((score, index) => `
+        <tr>
+            <td class="rank">#${index + 1}</td>
+            <td class="player">
+                ${escapeHTML(score.name || "Anonymous")}
+                <br><span class="badge cheat">CHEATS USED</span>
+            </td>
+            <td class="time">${formatTime(score.time)}</td>
+            <td>${verificationBadge(score)}</td>
+            <td class="date">${formatDate(score.date)}</td>
+        </tr>
+    `).join("");
+}
+
+function updateStats() {
+    document.getElementById("totalPlayers").textContent =
+        legitimateEntries.length.toLocaleString();
+
+    document.getElementById("cheatPlayers").textContent =
+        cheatEntries.length.toLocaleString();
+
+    document.getElementById("fastestTime").textContent =
+        legitimateEntries.length
+            ? formatTime(legitimateEntries[0].time)
+            : "--";
+}
+
 function escapeHTML(value) {
-    return String(value ?? "Anonymous").replace(/[&<>"']/g, char => ({
+    return String(value).replace(/[&<>"']/g, character => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
         "'": "&#039;"
-    })[char]);
+    })[character]);
 }
 
-function updateStatus(message, error = false) {
-    $("statusText").textContent = message;
-    $("statusDot").style.background = error ? "var(--red)" : "var(--green)";
-}
-
-function renderStats() {
-    $("totalScores").textContent = legitimateScores.length.toLocaleString();
-    $("cheatCount").textContent = cheatScores.length.toLocaleString();
-    $("worldRecord").textContent = legitimateScores.length
-        ? formatTime(legitimateScores[0].time)
-        : "--";
-}
-
-function renderPodium() {
-    const entries = [
-        { score: legitimateScores[0], className: "first", label: "WORLD RECORD" },
-        { score: legitimateScores[1], className: "second", label: "2ND PLACE" },
-        { score: legitimateScores[2], className: "third", label: "3RD PLACE" }
-    ];
-
-    $("podium").innerHTML = entries.map(entry => {
-        if (!entry.score) {
-            return `<div class="podium-card ${entry.className}">
-                <div class="podium-label">${entry.label}</div>
-                <div class="empty">No record yet</div>
-            </div>`;
-        }
-
-        return `<div class="podium-card ${entry.className}">
-            <div class="podium-label">${entry.label}</div>
-            <div class="podium-name">${escapeHTML(entry.score.name)}</div>
-            <div class="podium-time">${formatTime(entry.score.time)}</div>
-        </div>`;
-    }).join("");
-}
-
-function renderLeaderboard() {
-    const search = $("searchInput").value.trim().toLowerCase();
-
-    const filtered = legitimateScores.filter(score =>
-        String(score.name || "").toLowerCase().includes(search)
-    );
-
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    currentPage = Math.min(currentPage, totalPages);
-
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const pageScores = filtered.slice(start, start + PAGE_SIZE);
-
-    if (!pageScores.length) {
-        $("leaderboardBody").innerHTML =
-            `<tr><td colspan="4" class="empty">No matching records found.</td></tr>`;
-    } else {
-        $("leaderboardBody").innerHTML = pageScores.map((score, index) => {
-            const rank = start + index + 1;
-            const rankClass = rank <= 3 ? `rank-${rank}` : "";
-
-            return `<tr>
-                <td class="rank ${rankClass}">#${rank}</td>
-                <td>${escapeHTML(score.name)}</td>
-                <td class="time">${formatTime(score.time)}</td>
-                <td>${formatDate(score.date)}</td>
-            </tr>`;
-        }).join("");
-    }
-
-    $("pageInfo").textContent = `Page ${currentPage} of ${totalPages}`;
-    $("previousButton").disabled = currentPage <= 1;
-    $("nextButton").disabled = currentPage >= totalPages;
-}
-
-function renderCheats() {
-    if (!cheatScores.length) {
-        $("cheatsBody").innerHTML =
-            `<tr><td colspan="4" class="empty">No suspicious times detected.</td></tr>`;
-        return;
-    }
-
-    $("cheatsBody").innerHTML = cheatScores.map(score => `
-        <tr>
-            <td><span class="cheat-badge">CHEATS USED</span></td>
-            <td>${escapeHTML(score.name)}</td>
-            <td class="time">${formatTime(score.time)}</td>
-            <td>${formatDate(score.date)}</td>
-        </tr>
-    `).join("");
-}
-
-function refreshDisplay() {
-    renderStats();
-    renderPodium();
-    renderLeaderboard();
-    renderCheats();
+function handleError(error) {
+    console.error("Leaderboard error:", error);
+    document.getElementById("statusMessage").textContent =
+        "Firebase error: " + error.message;
 }
 
 const legitimateQuery = query(
     scoresRef,
-    where("time", ">=", CHEAT_THRESHOLD),
+    where("time", ">=", 5000),
     orderBy("time", "asc"),
-    limit(LEGITIMATE_LIMIT)
+    limit(1000)
 );
 
-const cheatQuery = query(
+const cheatsQuery = query(
     scoresRef,
-    where("time", "<", CHEAT_THRESHOLD),
+    where("time", "<", 5000),
     orderBy("time", "asc")
 );
 
 let legitimateLoaded = false;
 let cheatsLoaded = false;
 
+function updatePage() {
+    if (!legitimateLoaded || !cheatsLoaded) return;
+
+    renderPodium();
+    renderLegitimate();
+    renderCheats();
+    updateStats();
+
+    document.getElementById("statusMessage").textContent =
+        "Leaderboard synced successfully · Live updates enabled";
+}
+
 onSnapshot(legitimateQuery, snapshot => {
-    legitimateScores = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
+    legitimateEntries = snapshot.docs.map(document => ({
+        id: document.id,
+        ...document.data()
     }));
 
     legitimateLoaded = true;
-    refreshDisplay();
+    updatePage();
+}, handleError);
 
-    if (cheatsLoaded) updateStatus("Live leaderboard connected");
-}, error => {
-    console.error("Leaderboard error:", error);
-    updateStatus("Leaderboard connection failed", true);
-    $("leaderboardBody").innerHTML =
-        `<tr><td colspan="4" class="empty">Unable to load leaderboard. Check Firestore read permissions.</td></tr>`;
-});
-
-onSnapshot(cheatQuery, snapshot => {
-    cheatScores = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
+onSnapshot(cheatsQuery, snapshot => {
+    cheatEntries = snapshot.docs.map(document => ({
+        id: document.id,
+        ...document.data()
     }));
 
     cheatsLoaded = true;
-    refreshDisplay();
+    updatePage();
+}, handleError);
 
-    if (legitimateLoaded) updateStatus("Live leaderboard connected");
-}, error => {
-    console.error("Cheat category error:", error);
-    updateStatus("Could not load all leaderboard categories", true);
-    $("cheatsBody").innerHTML =
-        `<tr><td colspan="4" class="empty">Unable to load suspicious records. Check Firestore read permissions.</td></tr>`;
-});
-
-$("searchInput").addEventListener("input", () => {
+searchInput.addEventListener("input", () => {
     currentPage = 1;
-    renderLeaderboard();
+    renderLegitimate();
 });
 
-$("previousButton").addEventListener("click", () => {
+pageSize.addEventListener("change", () => {
+    currentPage = 1;
+    renderLegitimate();
+});
+
+document.getElementById("previousPage").addEventListener("click", () => {
     if (currentPage > 1) {
         currentPage--;
-        renderLeaderboard();
+        renderLegitimate();
     }
 });
 
-$("nextButton").addEventListener("click", () => {
+document.getElementById("nextPage").addEventListener("click", () => {
     currentPage++;
-    renderLeaderboard();
-});
-
-$("refreshButton").addEventListener("click", () => {
-    $("refreshButton").textContent = "Live updates enabled";
-    refreshDisplay();
-    setTimeout(() => $("refreshButton").textContent = "Refresh", 1500);
+    renderLegitimate();
 });
 </script>
 </body>
