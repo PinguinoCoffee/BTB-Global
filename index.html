@@ -55,7 +55,7 @@ header p { color: var(--muted); margin-top: 9px; }
 }
 .stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 25px;
 }
@@ -71,7 +71,7 @@ header p { color: var(--muted); margin-top: 9px; }
     font-size: 25px;
     margin-bottom: 5px;
 }
-.stat span { color: var(--muted); font-size: 12px; }
+.stat span { color: var(--muted); font-size: 11px; }
 .section {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -139,6 +139,11 @@ header p { color: var(--muted); margin-top: 9px; }
     background: #351416;
     border: 1px solid #8e3036;
 }
+.alleged {
+    color: #e3a6ff;
+    background: #271633;
+    border: 1px solid #8957a8;
+}
 .controls {
     display: flex;
     gap: 10px;
@@ -190,12 +195,14 @@ tbody tr:hover { background: #1c2128; }
     border-top: 1px solid var(--border);
 }
 .pagination span { color: var(--muted); font-size: 12px; }
-.cheat-intro {
+.cheat-title { color: var(--red); }
+.alleged-title { color: #e3a6ff; }
+.section-description {
     color: var(--muted);
     font-size: 13px;
     padding: 15px 20px 0;
+    line-height: 1.6;
 }
-.cheat-title { color: var(--red); }
 .status-message {
     color: var(--muted);
     font-size: 12px;
@@ -208,9 +215,11 @@ footer {
     font-size: 11px;
     margin-top: 35px;
 }
+@media(max-width: 750px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+}
 @media(max-width: 650px) {
     body { padding: 20px 10px 40px; }
-    .stats { gap: 7px; }
     .stat { padding: 13px 5px; }
     .stat strong { font-size: 20px; }
     .stat span { font-size: 10px; }
@@ -233,7 +242,11 @@ footer {
 <div class="stats">
     <div class="stat">
         <strong id="totalPlayers">0</strong>
-        <span>LEGITIMATE ENTRIES</span>
+        <span>RANKED ENTRIES</span>
+    </div>
+    <div class="stat">
+        <strong id="allegedPlayers">0</strong>
+        <span>AWAITING APPROVAL</span>
     </div>
     <div class="stat">
         <strong id="cheatPlayers">0</strong>
@@ -241,14 +254,14 @@ footer {
     </div>
     <div class="stat">
         <strong id="fastestTime">--</strong>
-        <span>WORLD RECORD</span>
+        <span>VERIFIED WORLD RECORD</span>
     </div>
 </div>
 
 <section class="section">
     <div class="section-heading">
         <h2>🏆 WORLD RECORD HOLDERS</h2>
-        <small>Top three fastest times</small>
+        <small>Verified entries only</small>
     </div>
     <div class="podium" id="podium">
         <div class="empty">Loading leaderboard...</div>
@@ -258,7 +271,7 @@ footer {
 <section class="section">
     <div class="section-heading">
         <h2>GLOBAL RANKINGS</h2>
-        <small>Top 1,000 legitimate entries</small>
+        <small>Top 1,000 entries</small>
     </div>
     <div class="controls">
         <input id="searchInput" type="search" placeholder="Search players...">
@@ -293,11 +306,13 @@ footer {
 
 <section class="section">
     <div class="section-heading">
-        <h2 class="cheat-title">🚫 CHEATS USED</h2>
-        <span class="badge cheat">UNDER 5 SECONDS</span>
+        <h2 class="alleged-title">⚠ ALLEGED CHEATS</h2>
+        <span class="badge alleged">ADMIN APPROVAL REQUIRED</span>
     </div>
-    <div class="cheat-intro">
-        Entries with recorded times below five seconds are separated from the legitimate rankings.
+    <div class="section-description">
+        Completion times between 5 and 10 seconds are flagged for review.
+        These entries are excluded from the rankings until an administrator
+        manually changes their verificationStatus to VERIFIED.
     </div>
     <div class="table-wrap">
         <table>
@@ -306,12 +321,38 @@ footer {
                     <th>#</th>
                     <th>Player</th>
                     <th>Time</th>
-                    <th>Verification</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="allegedBody">
+                <tr><td colspan="5" class="empty">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-heading">
+        <h2 class="cheat-title">🚫 CHEATS USED</h2>
+        <span class="badge cheat">UNDER 5 SECONDS</span>
+    </div>
+    <div class="section-description">
+        Entries with completion times below 5 seconds are automatically
+        classified as CHEATS USED and excluded from legitimate rankings.
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Player</th>
+                    <th>Time</th>
                     <th>Date</th>
                 </tr>
             </thead>
             <tbody id="cheatBody">
-                <tr><td colspan="5" class="empty">Loading...</td></tr>
+                <tr><td colspan="4" class="empty">Loading...</td></tr>
             </tbody>
         </table>
     </div>
@@ -327,6 +368,7 @@ footer {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
 import {
     getFirestore,
     collection,
@@ -350,11 +392,20 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const scoresRef = collection(db, "leaderboard");
 
-let legitimateEntries = [];
+let normalEntries = [];
+let allegedEntries = [];
 let cheatEntries = [];
+
+let legitimateEntries = [];
+let pendingAllegedEntries = [];
+
 let currentPage = 1;
+let normalLoaded = false;
+let allegedLoaded = false;
+let cheatsLoaded = false;
 
 const leaderboardBody = document.getElementById("leaderboardBody");
+const allegedBody = document.getElementById("allegedBody");
 const cheatBody = document.getElementById("cheatBody");
 const searchInput = document.getElementById("searchInput");
 const pageSize = document.getElementById("pageSize");
@@ -365,8 +416,11 @@ function formatTime(milliseconds) {
 
 function formatDate(dateString) {
     if (!dateString) return "Unknown";
+
     const date = new Date(dateString);
+
     if (Number.isNaN(date.getTime())) return "Unknown";
+
     return date.toLocaleDateString(undefined, {
         year: "numeric",
         month: "short",
@@ -374,23 +428,40 @@ function formatDate(dateString) {
     });
 }
 
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    })[character]);
+}
+
 function getVerification(score) {
-    return score.verificationStatus === "UNVERIFIED"
-        ? "UNVERIFIED"
-        : "VERIFIED";
+    return score.verificationStatus === "VERIFIED"
+        ? "VERIFIED"
+        : "UNVERIFIED";
 }
 
 function verificationBadge(score) {
     const status = getVerification(score);
+
     return `<span class="badge ${status.toLowerCase()}">${status}</span>`;
 }
 
 function renderPodium() {
     const podium = document.getElementById("podium");
-    const topThree = legitimateEntries.slice(0, 3);
+
+    const verifiedEntries = legitimateEntries.filter(score =>
+        getVerification(score) === "VERIFIED"
+    );
+
+    const topThree = verifiedEntries.slice(0, 3);
 
     if (!topThree.length) {
-        podium.innerHTML = '<div class="empty">No verified leaderboard entries yet.</div>';
+        podium.innerHTML =
+            '<div class="empty">No verified records available yet.</div>';
         return;
     }
 
@@ -404,15 +475,18 @@ function renderPodium() {
         <div class="podium-card ${positions[index].className}">
             <div class="podium-rank">${positions[index].label}</div>
             <div class="podium-name">${escapeHTML(score.name || "Anonymous")}</div>
-            <div>${verificationBadge(score)}</div>
+            <div><span class="badge verified">VERIFIED</span></div>
             <div class="podium-time">${formatTime(score.time)}</div>
-            <div class="podium-label">${["WORLD RECORD", "2ND PLACE", "3RD PLACE"][index]}</div>
+            <div class="podium-label">
+                ${["WORLD RECORD", "2ND PLACE", "3RD PLACE"][index]}
+            </div>
         </div>
     `).join("");
 }
 
 function renderLegitimate() {
     const search = searchInput.value.trim().toLowerCase();
+
     const filtered = legitimateEntries.filter(score =>
         (score.name || "").toLowerCase().includes(search)
     );
@@ -431,6 +505,7 @@ function renderLegitimate() {
     } else {
         leaderboardBody.innerHTML = pageEntries.map((score, index) => {
             const rank = start + index + 1;
+
             return `
                 <tr>
                     <td class="rank">#${rank}</td>
@@ -450,10 +525,33 @@ function renderLegitimate() {
     document.getElementById("nextPage").disabled = currentPage >= totalPages;
 }
 
+function renderAlleged() {
+    if (!pendingAllegedEntries.length) {
+        allegedBody.innerHTML =
+            '<tr><td colspan="5" class="empty">No entries awaiting approval.</td></tr>';
+        return;
+    }
+
+    allegedBody.innerHTML = pendingAllegedEntries.map((score, index) => `
+        <tr>
+            <td class="rank">#${index + 1}</td>
+            <td class="player">
+                ${escapeHTML(score.name || "Anonymous")}
+                <br><span class="badge alleged">ALLEGED CHEATS</span>
+            </td>
+            <td class="time">${formatTime(score.time)}</td>
+            <td>
+                <span class="badge unverified">AWAITING APPROVAL</span>
+            </td>
+            <td class="date">${formatDate(score.date)}</td>
+        </tr>
+    `).join("");
+}
+
 function renderCheats() {
     if (!cheatEntries.length) {
         cheatBody.innerHTML =
-            '<tr><td colspan="5" class="empty">No cheat-flagged entries found.</td></tr>';
+            '<tr><td colspan="4" class="empty">No cheat-flagged entries found.</td></tr>';
         return;
     }
 
@@ -465,7 +563,6 @@ function renderCheats() {
                 <br><span class="badge cheat">CHEATS USED</span>
             </td>
             <td class="time">${formatTime(score.time)}</td>
-            <td>${verificationBadge(score)}</td>
             <td class="date">${formatDate(score.date)}</td>
         </tr>
     `).join("");
@@ -475,52 +572,50 @@ function updateStats() {
     document.getElementById("totalPlayers").textContent =
         legitimateEntries.length.toLocaleString();
 
+    document.getElementById("allegedPlayers").textContent =
+        pendingAllegedEntries.length.toLocaleString();
+
     document.getElementById("cheatPlayers").textContent =
         cheatEntries.length.toLocaleString();
 
+    const fastestVerified = legitimateEntries.find(score =>
+        getVerification(score) === "VERIFIED"
+    );
+
     document.getElementById("fastestTime").textContent =
-        legitimateEntries.length
-            ? formatTime(legitimateEntries[0].time)
+        fastestVerified
+            ? formatTime(fastestVerified.time)
             : "--";
 }
 
-function escapeHTML(value) {
-    return String(value).replace(/[&<>"']/g, character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-    })[character]);
+function rebuildRankings() {
+    const approvedAlleged = allegedEntries.filter(score =>
+        score.verificationStatus === "VERIFIED"
+    );
+
+    pendingAllegedEntries = allegedEntries.filter(score =>
+        score.verificationStatus !== "VERIFIED"
+    );
+
+    legitimateEntries = [
+        ...normalEntries,
+        ...approvedAlleged
+    ].sort((a, b) => a.time - b.time).slice(0, 1000);
+
+    currentPage = Math.min(
+        currentPage,
+        Math.max(1, Math.ceil(legitimateEntries.length / Number(pageSize.value)))
+    );
 }
-
-function handleError(error) {
-    console.error("Leaderboard error:", error);
-    document.getElementById("statusMessage").textContent =
-        "Firebase error: " + error.message;
-}
-
-const legitimateQuery = query(
-    scoresRef,
-    where("time", ">=", 5000),
-    orderBy("time", "asc"),
-    limit(1000)
-);
-
-const cheatsQuery = query(
-    scoresRef,
-    where("time", "<", 5000),
-    orderBy("time", "asc")
-);
-
-let legitimateLoaded = false;
-let cheatsLoaded = false;
 
 function updatePage() {
-    if (!legitimateLoaded || !cheatsLoaded) return;
+    if (!normalLoaded || !allegedLoaded || !cheatsLoaded) return;
+
+    rebuildRankings();
 
     renderPodium();
     renderLegitimate();
+    renderAlleged();
     renderCheats();
     updateStats();
 
@@ -528,13 +623,63 @@ function updatePage() {
         "Leaderboard synced successfully · Live updates enabled";
 }
 
-onSnapshot(legitimateQuery, snapshot => {
-    legitimateEntries = snapshot.docs.map(document => ({
+function handleError(error) {
+    console.error("Leaderboard error:", error);
+
+    document.getElementById("statusMessage").textContent =
+        "Firebase error: " + error.message;
+}
+
+/*
+    Normal entries:
+    10 seconds or more.
+
+    Alleged entries:
+    5 seconds to less than 10 seconds.
+
+    Cheat entries:
+    Less than 5 seconds.
+*/
+
+const normalQuery = query(
+    scoresRef,
+    where("time", ">=", 10000),
+    orderBy("time", "asc"),
+    limit(1000)
+);
+
+const allegedQuery = query(
+    scoresRef,
+    where("time", ">=", 5000),
+    where("time", "<", 10000),
+    orderBy("time", "asc"),
+    limit(1000)
+);
+
+const cheatsQuery = query(
+    scoresRef,
+    where("time", "<", 5000),
+    orderBy("time", "asc"),
+    limit(1000)
+);
+
+onSnapshot(normalQuery, snapshot => {
+    normalEntries = snapshot.docs.map(document => ({
         id: document.id,
         ...document.data()
     }));
 
-    legitimateLoaded = true;
+    normalLoaded = true;
+    updatePage();
+}, handleError);
+
+onSnapshot(allegedQuery, snapshot => {
+    allegedEntries = snapshot.docs.map(document => ({
+        id: document.id,
+        ...document.data()
+    }));
+
+    allegedLoaded = true;
     updatePage();
 }, handleError);
 
@@ -566,8 +711,15 @@ document.getElementById("previousPage").addEventListener("click", () => {
 });
 
 document.getElementById("nextPage").addEventListener("click", () => {
-    currentPage++;
-    renderLegitimate();
+    const totalPages = Math.max(
+        1,
+        Math.ceil(legitimateEntries.length / Number(pageSize.value))
+    );
+
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderLegitimate();
+    }
 });
 </script>
 </body>
