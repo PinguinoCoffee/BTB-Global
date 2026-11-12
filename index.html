@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -335,11 +334,14 @@ footer {
 <section class="section">
     <div class="section-heading">
         <h2 class="cheat-title">🚫 CHEATS USED</h2>
-        <span class="badge cheat">UNDER 5 SECONDS</span>
+        <span class="badge cheat">CHEATS_USED</span>
     </div>
     <div class="section-description">
-        Entries with completion times below 5 seconds are automatically
-        classified as CHEATS USED and excluded from legitimate rankings.
+        Entries under 5 seconds are automatically listed here.
+        Entries manually flagged by an administrator with
+        verificationStatus: CHEATS_USED are also displayed here,
+        regardless of their completion time.
+        These entries are excluded from legitimate rankings.
     </div>
     <div class="table-wrap">
         <table>
@@ -348,11 +350,12 @@ footer {
                     <th>#</th>
                     <th>Player</th>
                     <th>Time</th>
+                    <th>Status</th>
                     <th>Date</th>
                 </tr>
             </thead>
             <tbody id="cheatBody">
-                <tr><td colspan="4" class="empty">Loading...</td></tr>
+                <tr><td colspan="5" class="empty">Loading...</td></tr>
             </tbody>
         </table>
     </div>
@@ -390,12 +393,16 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
 const scoresRef = collection(db, "leaderboard");
+const cheatsRef = collection(db, "cheatsLeaderboard");
 
 let normalEntries = [];
 let allegedEntries = [];
-let cheatEntries = [];
+let underFiveEntries = [];
+let manuallyFlaggedEntries = [];
 
+let cheatEntries = [];
 let legitimateEntries = [];
 let pendingAllegedEntries = [];
 
@@ -403,6 +410,7 @@ let currentPage = 1;
 let normalLoaded = false;
 let allegedLoaded = false;
 let cheatsLoaded = false;
+let manuallyFlaggedLoaded = false;
 
 const leaderboardBody = document.getElementById("leaderboardBody");
 const allegedBody = document.getElementById("allegedBody");
@@ -411,7 +419,7 @@ const searchInput = document.getElementById("searchInput");
 const pageSize = document.getElementById("pageSize");
 
 function formatTime(milliseconds) {
-    return (milliseconds / 1000).toFixed(3) + "s";
+    return (Number(milliseconds) / 1000).toFixed(3) + "s";
 }
 
 function formatDate(dateString) {
@@ -429,7 +437,7 @@ function formatDate(dateString) {
 }
 
 function escapeHTML(value) {
-    return String(value).replace(/[&<>"']/g, character => ({
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
@@ -439,15 +447,21 @@ function escapeHTML(value) {
 }
 
 function getVerification(score) {
-    return score.verificationStatus === "VERIFIED"
-        ? "VERIFIED"
-        : "UNVERIFIED";
+    return score.verificationStatus || "UNVERIFIED";
 }
 
 function verificationBadge(score) {
     const status = getVerification(score);
 
-    return `<span class="badge ${status.toLowerCase()}">${status}</span>`;
+    if (status === "CHEATS_USED") {
+        return '<span class="badge cheat">CHEATS_USED</span>';
+    }
+
+    if (status === "VERIFIED") {
+        return '<span class="badge verified">VERIFIED</span>';
+    }
+
+    return '<span class="badge unverified">UNVERIFIED</span>';
 }
 
 function renderPodium() {
@@ -551,21 +565,31 @@ function renderAlleged() {
 function renderCheats() {
     if (!cheatEntries.length) {
         cheatBody.innerHTML =
-            '<tr><td colspan="4" class="empty">No cheat-flagged entries found.</td></tr>';
+            '<tr><td colspan="5" class="empty">No cheat-flagged entries found.</td></tr>';
         return;
     }
 
-    cheatBody.innerHTML = cheatEntries.map((score, index) => `
-        <tr>
-            <td class="rank">#${index + 1}</td>
-            <td class="player">
-                ${escapeHTML(score.name || "Anonymous")}
-                <br><span class="badge cheat">CHEATS USED</span>
-            </td>
-            <td class="time">${formatTime(score.time)}</td>
-            <td class="date">${formatDate(score.date)}</td>
-        </tr>
-    `).join("");
+    cheatBody.innerHTML = cheatEntries.map((score, index) => {
+        const manuallyFlagged = score.verificationStatus === "CHEATS_USED";
+
+        return `
+            <tr>
+                <td class="rank">#${index + 1}</td>
+                <td class="player">
+                    ${escapeHTML(score.name || "Anonymous")}
+                    <br>
+                    <span class="badge cheat">CHEATS USED</span>
+                </td>
+                <td class="time">${formatTime(score.time)}</td>
+                <td>
+                    <span class="badge cheat">
+                        ${manuallyFlagged ? "CHEATS_USED" : "UNDER 5 SECONDS"}
+                    </span>
+                </td>
+                <td class="date">${formatDate(score.date)}</td>
+            </tr>
+        `;
+    }).join("");
 }
 
 function updateStats() {
@@ -589,27 +613,52 @@ function updateStats() {
 }
 
 function rebuildRankings() {
+    const flaggedIDs = new Set(
+        cheatEntries.map(score => score.id).filter(Boolean)
+    );
+
     const approvedAlleged = allegedEntries.filter(score =>
-        score.verificationStatus === "VERIFIED"
+        score.verificationStatus === "VERIFIED" &&
+        !flaggedIDs.has(score.id)
     );
 
     pendingAllegedEntries = allegedEntries.filter(score =>
-        score.verificationStatus !== "VERIFIED"
+        score.verificationStatus !== "VERIFIED" &&
+        score.verificationStatus !== "CHEATS_USED" &&
+        !flaggedIDs.has(score.id)
     );
 
     legitimateEntries = [
-        ...normalEntries,
+        ...normalEntries.filter(score =>
+            score.verificationStatus !== "CHEATS_USED" &&
+            !flaggedIDs.has(score.id)
+        ),
         ...approvedAlleged
-    ].sort((a, b) => a.time - b.time).slice(0, 1000);
-
-    currentPage = Math.min(
-        currentPage,
-        Math.max(1, Math.ceil(legitimateEntries.length / Number(pageSize.value)))
-    );
+    ]
+    .sort((a, b) => Number(a.time) - Number(b.time))
+    .slice(0, 1000);
 }
 
 function updatePage() {
-    if (!normalLoaded || !allegedLoaded || !cheatsLoaded) return;
+    if (
+        !normalLoaded ||
+        !allegedLoaded ||
+        !cheatsLoaded ||
+        !manuallyFlaggedLoaded
+    ) return;
+
+    const combinedCheats = new Map();
+
+    for (const score of underFiveEntries) {
+        combinedCheats.set(score.id, score);
+    }
+
+    for (const score of manuallyFlaggedEntries) {
+        combinedCheats.set(score.id, score);
+    }
+
+    cheatEntries = Array.from(combinedCheats.values())
+        .sort((a, b) => Number(a.time) - Number(b.time));
 
     rebuildRankings();
 
@@ -637,8 +686,12 @@ function handleError(error) {
     Alleged entries:
     5 seconds to less than 10 seconds.
 
-    Cheat entries:
+    Automatic cheat entries:
     Less than 5 seconds.
+
+    Manual cheat entries:
+    verificationStatus === "CHEATS_USED"
+    regardless of completion time.
 */
 
 const normalQuery = query(
@@ -656,10 +709,16 @@ const allegedQuery = query(
     limit(1000)
 );
 
-const cheatsQuery = query(
+const underFiveQuery = query(
     scoresRef,
     where("time", "<", 5000),
     orderBy("time", "asc"),
+    limit(1000)
+);
+
+const manuallyFlaggedQuery = query(
+    scoresRef,
+    where("verificationStatus", "==", "CHEATS_USED"),
     limit(1000)
 );
 
@@ -683,13 +742,23 @@ onSnapshot(allegedQuery, snapshot => {
     updatePage();
 }, handleError);
 
-onSnapshot(cheatsQuery, snapshot => {
-    cheatEntries = snapshot.docs.map(document => ({
+onSnapshot(underFiveQuery, snapshot => {
+    underFiveEntries = snapshot.docs.map(document => ({
         id: document.id,
         ...document.data()
     }));
 
     cheatsLoaded = true;
+    updatePage();
+}, handleError);
+
+onSnapshot(manuallyFlaggedQuery, snapshot => {
+    manuallyFlaggedEntries = snapshot.docs.map(document => ({
+        id: document.id,
+        ...document.data()
+    }));
+
+    manuallyFlaggedLoaded = true;
     updatePage();
 }, handleError);
 
